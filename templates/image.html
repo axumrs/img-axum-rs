@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AXUM.RS图库</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css"/>
+</head>
+
+<body>
+  
+</body>
+    <div class="container my-6">
+        <h1 class="title is-1">AXUM.RS图库</h1>
+        <form action="" method="post" class="my-6">
+            <div class="file has-name is-boxed my-3 is-danger">
+                <label class="file-label">
+                    <input class="file-input" type="file" name="img" id="img" accept=".png,.jpeg,.jpg,.gif" required>
+                    <span class="file-cta">
+                        <span class="file-icon">
+                            <i class="fas fa-upload"></i>
+                        </span>
+                        <span class="file-label">
+                            选择要上传的文件
+                        </span>
+                    </span>
+                    <span class="file-name" id="imgPath">
+                        Screen Shot 2017-07-29 at 15.54.25.png
+                    </span>
+                </label>
+            </div>
+
+            <div class="field my-3">
+                <div class="control">
+                    <label class="checkbox">
+                        <input type="checkbox" required>
+                       我已了解本服务仅用于上传AXUM中文网的支付证明，并且会在15天后自动删除。
+                    </label>
+                </div>
+            </div>
+
+            <div class="field is-grouped my-3">
+                <div class="control">
+                    <button class="button is-link" type="submit">上传</button>
+                </div>
+                
+            </div>
+        </form>
+
+        <div class="box">
+            <p>恭喜，上传成功！图片URL是：</p>
+       
+                <div class="field has-addons my-3">
+                    <div class="control is-expanded">
+                        <input class="input" type="url" value="" id="img-url" readonly placeholder="图片地址">
+                    </div>
+                    <div class="control">
+                        <button type="button" class="button is-info" id="btn-copy-img-url">
+                            复制
+                        </button>
+                    </div>
+                </div>
+           
+        </div>
+
+        <div class="">
+            <article class="message is-danger">
+                <div class="message-header">
+                    <p>上传失败</p>
+                </div>
+                <div class="message-body">
+                   不支持的文件类型。
+                </div>
+            </article>
+            <div><a class="button is-link">重新上传</a></div>
+        </div>
+    </div>
+
+    <script>
+       document.getElementById('img').addEventListener('change', function(e) {
+        document.getElementById('imgPath').innerText = (e.target.value);
+       });
+       document.getElementById('btn-copy-img-url').addEventListener('click', function() {
+            let text = document.getElementById('img-url').value;
+            navigator.clipboard.writeText(text).then(()=>{alert('复制成功')}).catch(e=>{alert('复制失败：'+e.toString())});
+       });
+    </script>
+</html>

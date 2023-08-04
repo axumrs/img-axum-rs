@@ -1,1 +1,7 @@
 /target
+/.env
+.DS_Store
+.atom
+.vscode
+.idea
+*.log*
