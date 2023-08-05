@@ -1,105 +1,171 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>AXUM.RS图库</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css"/>
-</head>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.9.0/css/all.min.css"
+    />
+    <style>
+      #uploading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background-color: rgb(17 24 39 / 0.7);
+        display: none;
+      }
+      #uploading > div {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50% -50%);
+        background-color: white;
+        padding: 1.5rem;
+      }
+    </style>
+  </head>
 
-<body>
-  
-</body>
-    <div class="container my-6">
-        <h1 class="title is-1">AXUM.RS图库</h1>
-    {% match cfg %}
-    {% when Some with (cfg) %}
-        <form action="/" method="post" class="my-6" enctype="multipart/form-data">
-            <div class="file has-name is-boxed my-3 is-danger">
-                <label class="file-label">
-                    <input class="file-input" type="file" name="img" id="img" accept=".png,.jpeg,.jpg,.gif" required>
-                    <span class="file-cta">
-                        <span class="file-icon">
-                            <i class="fas fa-upload"></i>
-                        </span>
-                        <span class="file-label">
-                            选择要上传的文件
-                        </span>
-                    </span>
-                    <span class="file-name" id="imgPath">
-                        &lt;未选择文件&gt;
-                    </span>
-                </label>
-            </div>
-          
+  <body></body>
+  <div class="container my-6">
+    <h1 class="title is-1">AXUM.RS图库</h1>
+    {% match cfg %} {% when Some with (cfg) %}
+    <form
+      action="/"
+      method="post"
+      class="my-6"
+      enctype="multipart/form-data"
+      onsubmit="return frmUpdateSubmitHandler()"
+    >
+      <div class="file has-name is-boxed my-3 is-danger">
+        <label class="file-label">
+          <input
+            class="file-input"
+            type="file"
+            name="img"
+            id="img"
+            accept=".png,.jpeg,.jpg,.gif"
+            required
+          />
+          <span class="file-cta">
+            <span class="file-icon">
+              <i class="fas fa-upload"></i>
+            </span>
+            <span class="file-label"> 选择要上传的文件 </span>
+          </span>
+          <span class="file-name" id="imgPath"> &lt;未选择文件&gt; </span>
+        </label>
+      </div>
 
-          
-            <div class="field my-3">
-                <div class="control">
-                    <label class="checkbox">
-                        <input type="checkbox" name="agreement" value="yes" required>
-                       我已了解本服务仅用于上传AXUM中文网的支付证明，并且会在{{cfg.expires_days}}天后自动删除。（文件大小限制，最大{{cfg.max_size/(1024*1024)}} MB）
-                    </label>
-                </div>
-            </div>
-           
-
-            <div class="field is-grouped my-3">
-                <div class="control">
-                    <button class="button is-link" type="submit">上传</button>
-                </div>
-                
-            </div>
-        </form>
-        {%when None%}
-        {% endmatch %}
-
-        {% match url %}
-        {% when Some with (url) %}
-        <div class="box">
-            <p>恭喜，上传成功！图片URL是：</p>
-       
-                <div class="field has-addons my-3">
-                    <div class="control is-expanded">
-                        <input class="input" type="url" value="{{url}}" id="img-url" readonly placeholder="图片地址">
-                    </div>
-                    <div class="control">
-                        <button type="button" class="button is-info" id="btn-copy-img-url">
-                            复制
-                        </button>
-                    </div>
-                </div>
-        <div><a class="button is-link" href="/">继续上传</a></div>
+      <div class="field my-3">
+        <div class="control">
+          <label class="checkbox">
+            <input
+              type="checkbox"
+              name="agreement"
+              id="agreement"
+              value="yes"
+              required
+            />
+            我已了解本服务仅用于上传AXUM中文网的支付证明，并且会在{{cfg.expires_days}}天后自动删除。（文件大小限制，最大{{cfg.max_size/(1024*1024)}}
+            MB）
+          </label>
         </div>
-        {%when None%}
-        {% endmatch %}
+      </div>
 
-        {% match err %}
-        {% when Some with (err) %}
-        <div class="">
-            <article class="message is-danger">
-                <div class="message-header">
-                    <p>上传失败</p>
-                </div>
-                <div class="message-body">
-                   {{err.message}}</div>
-               
-            </article>
-            <div><a class="button is-link" href="/">重新上传</a></div>
+      <div class="field is-grouped my-3">
+        <div class="control">
+          <button class="button is-link" type="submit" id="btn-upload">
+            上传
+          </button>
         </div>
-        {%when None%}
-        {% endmatch %}
+      </div>
+    </form>
+    <div id="uploading">
+      <div class="has-text-danger">正在上传，请稍候……</div>
     </div>
+    {%when None%} {% endmatch %} {% match url %} {% when Some with (url) %}
+    <div class="box">
+      <p>恭喜，上传成功！图片URL是：</p>
 
-    <script>
-       document.getElementById('img') && document.getElementById('img').addEventListener('change', function(e) {
-        document.getElementById('imgPath').innerText = (e.target.value);
-       });
-       document.getElementById('btn-copy-img-url')  && document.getElementById('btn-copy-img-url').addEventListener('click', function() {
-            let text = document.getElementById('img-url').value;
-            navigator.clipboard.writeText(text).then(()=>{alert('复制成功')}).catch(e=>{alert('复制失败：'+e.toString())});
-       });
-    </script>
+      <div class="field has-addons my-3">
+        <div class="control is-expanded">
+          <input
+            class="input"
+            type="url"
+            value="{{url}}"
+            id="img-url"
+            readonly
+            placeholder="图片地址"
+          />
+        </div>
+        <div class="control">
+          <button type="button" class="button is-info" id="btn-copy-img-url">
+            复制
+          </button>
+        </div>
+      </div>
+      <div><a class="button is-link" href="/">继续上传</a></div>
+    </div>
+    {%when None%} {% endmatch %} {% match err %} {% when Some with (err) %}
+    <div class="">
+      <article class="message is-danger">
+        <div class="message-header">
+          <p>上传失败</p>
+        </div>
+        <div class="message-body">{{err.message}}</div>
+      </article>
+      <div><a class="button is-link" href="/">重新上传</a></div>
+    </div>
+    {%when None%} {% endmatch %}
+  </div>
+
+  <script>
+    document.getElementById("img") &&
+      document.getElementById("img").addEventListener("change", function (e) {
+        document.getElementById("imgPath").innerText = e.target.value;
+      });
+
+    const btnUpload = document.getElementById("btn-upload");
+
+    function frmUpdateSubmitHandler() {
+      const imgDom = document.getElementById("img");
+      const agreementDom = document.getElementById("agreement");
+      if (!(imgDom && agreementDom)) {
+        return false;
+      }
+      if (!(imgDom.value && agreementDom.checked)) {
+        return false;
+      }
+      btnUpload.setAttribute("disabled", "disabled");
+      const uploadingMsg = document.getElementById("uploading");
+      if (!uploadingMsg) {
+        return false;
+      }
+      uploadingMsg.style.display = "block";
+      return true;
+    }
+
+    document.getElementById("btn-copy-img-url") &&
+      document
+        .getElementById("btn-copy-img-url")
+        .addEventListener("click", function () {
+          let text = document.getElementById("img-url").value;
+          navigator.clipboard
+            .writeText(text)
+            .then(() => {
+              alert("复制成功");
+            })
+            .catch((e) => {
+              alert("复制失败：" + e.toString());
+            });
+        });
+  </script>
 </html>
