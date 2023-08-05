@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::{extract::DefaultBodyLimit, routing::get, Router};
-use img_axum_rs::{handler, AppState, Config, ImgConfig};
+use img_axum_rs::{handler, AppState, Config, Error};
 use tower_http::limit::RequestBodyLimitLayer;
 
 #[tokio::main]
@@ -34,20 +34,18 @@ async fn main() {
 
     let img_cfg = Arc::new(cfg.img);
 
-    tokio::spawn(remove_expired_objects(
-        pool.clone(),
-        bucket.clone(),
-        img_cfg.clone(),
-    ));
+    let app_state = Arc::new(AppState {
+        pool,
+        bucket,
+        img_cfg: img_cfg.clone(),
+    });
+
+    tokio::spawn(remove_expired_objects(app_state.clone()));
 
     let app = Router::new()
         .route("/", get(handler::upload_ui).post(handler::upload))
         .route("/:url", get(handler::result_ui))
-        .with_state(Arc::new(AppState {
-            pool,
-            bucket,
-            img_cfg: img_cfg.clone(),
-        }))
+        .with_state(app_state)
         .layer(DefaultBodyLimit::disable())
         .layer(RequestBodyLimitLayer::new((&*img_cfg).max_size * 2));
 
@@ -59,10 +57,38 @@ async fn main() {
         .unwrap();
 }
 
-async fn remove_expired_objects(
-    pool: Arc<sqlx::PgPool>,
-    bucket: Arc<s3::Bucket>,
-    img_cfg: Arc<ImgConfig>,
-) {
-    tracing::info!("开始删除过期对象");
+async fn remove_expired_objects(app_state: Arc<AppState>) {
+    loop {
+        tracing::info!("开始删除过期对象");
+        let expired_dateline =
+            chrono::Local::now() - chrono::Duration::days((&app_state.img_cfg).expires_days as i64);
+        // let sql = "UPDATE images SET is_deleted=true WHERE dateline <= $1 AND is_deleted=false RETURNING path";
+        let sql = "DELETE FROM images WHERE dateline <= $1 RETURNING path";
+        let paths: Vec<(String,)> = match sqlx::query_as(sql)
+            .bind(&expired_dateline)
+            .fetch_all(&*app_state.pool)
+            .await
+        {
+            Ok(paths) => paths,
+            Err(e) => {
+                let e = Error::from(e);
+                tracing::error!("查询过期对象失败：{}", e.message);
+                continue;
+            }
+        };
+        tracing::info!("共有{}个过期对象", paths.len());
+        for path in paths {
+            match (&*app_state.bucket).delete_object(&path.0).await {
+                Ok(resp) => {
+                    tracing::info!("删除过期对象成功：{}, {:?}", &path.0, resp);
+                }
+                Err(e) => {
+                    let e = Error::from(e);
+                    tracing::error!("删除过期对象失败：{}", e.message);
+                }
+            };
+        }
+        tracing::info!("休息一下，马上回来");
+        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+    }
 }
