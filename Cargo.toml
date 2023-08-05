@@ -1,6 +1,6 @@
 [package]
 name = "img-axum-rs"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 authors = ["axum.rs <team@axum.rs>"]
 license = "MIT"
@@ -13,7 +13,7 @@ description = "axum.rs图库"
 [dependencies]
 tokio = { version = "1", features = ["full"]}
 axum = { version = "0.6", features = ["multipart"]}
-tower-http = { version = "0.4", features = ["limit"] }
+tower-http = { version = "0.4", features = ["limit", "fs"] }
 config = "0.13"
 dotenv = "0.15"
 tracing = "0.1"

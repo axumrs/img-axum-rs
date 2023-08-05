@@ -970,7 +970,7 @@ dependencies = [
 
 [[package]]
 name = "img-axum-rs"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "askama",
  "axum",
@@ -2488,9 +2488,16 @@ dependencies = [
  "http",
  "http-body",
  "http-range-header",
+ "httpdate",
+ "mime",
+ "mime_guess",
+ "percent-encoding",
  "pin-project-lite",
+ "tokio",
+ "tokio-util",
  "tower-layer",
  "tower-service",
+ "tracing",
 ]
 
 [[package]]

@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use axum::{extract::DefaultBodyLimit, routing::get, Router};
 use img_axum_rs::{handler, AppState, Config, Error};
-use tower_http::limit::RequestBodyLimitLayer;
+use tower_http::{limit::RequestBodyLimitLayer, services::ServeDir};
 
 #[tokio::main]
 async fn main() {
@@ -47,7 +47,8 @@ async fn main() {
         .route("/:url", get(handler::result_ui))
         .with_state(app_state)
         .layer(DefaultBodyLimit::disable())
-        .layer(RequestBodyLimitLayer::new((&*img_cfg).max_size * 2));
+        .layer(RequestBodyLimitLayer::new((&*img_cfg).max_size * 2))
+        .nest_service("/static", ServeDir::new("static"));
 
     tracing::info!("Web服务监听于：{}", &cfg.web.addr);
 
