@@ -94,10 +94,10 @@
     </div>
 
     <script>
-       document.getElementById('img').addEventListener('change', function(e) {
+       document.getElementById('img') && document.getElementById('img').addEventListener('change', function(e) {
         document.getElementById('imgPath').innerText = (e.target.value);
        });
-       document.getElementById('btn-copy-img-url').addEventListener('click', function() {
+       document.getElementById('btn-copy-img-url')  && document.getElementById('btn-copy-img-url').addEventListener('click', function() {
             let text = document.getElementById('img-url').value;
             navigator.clipboard.writeText(text).then(()=>{alert('复制成功')}).catch(e=>{alert('复制失败：'+e.toString())});
        });
