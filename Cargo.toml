@@ -1,6 +1,6 @@
 [package]
 name = "img-axum-rs"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["axum.rs <team@axum.rs>"]
 license = "MIT"
