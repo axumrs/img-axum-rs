@@ -2,6 +2,7 @@ mod config;
 mod err;
 pub mod handler;
 mod state;
+pub mod view;
 
 pub use crate::config::*;
 pub use err::{Error, Kind as ErrorKind};

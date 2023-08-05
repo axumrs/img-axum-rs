@@ -1,8 +1,14 @@
-use axum::response::IntoResponse;
+use askama::Template;
+use axum::response::{Html, IntoResponse};
+
+use crate::view;
 
 #[derive(Debug)]
 pub enum Kind {
     Config,
+    Template,
+    Image,
+    S3,
 }
 
 #[derive(Debug)]
@@ -40,12 +46,26 @@ impl std::error::Error for Error {}
 
 impl IntoResponse for Error {
     fn into_response(self) -> axum::response::Response {
-        self.message.into_response()
+        let tpl = view::ImageTemplate::error(self);
+        let html = tpl.render().map_err(Self::from).unwrap();
+        Html(html).into_response()
     }
 }
 
 impl From<config::ConfigError> for Error {
     fn from(e: config::ConfigError) -> Self {
         Self::with_cause(Kind::Config, Box::new(e))
+    }
+}
+
+impl From<askama::Error> for Error {
+    fn from(e: askama::Error) -> Self {
+        Self::with_cause(Kind::Template, Box::new(e))
+    }
+}
+
+impl From<s3::error::S3Error> for Error {
+    fn from(e: s3::error::S3Error) -> Self {
+        Self::with_cause(Kind::S3, Box::new(e))
     }
 }

@@ -29,6 +29,7 @@ pub struct WebConfig {
 pub struct ImgConfig {
     pub expires_days: u8,
     pub domain: String,
+    pub max_size: usize,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
