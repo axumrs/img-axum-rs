@@ -89,7 +89,13 @@ async fn remove_expired_objects(app_state: Arc<AppState>) {
                 }
             };
         }
-        tracing::info!("休息一下，马上回来");
-        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+        tracing::info!(
+            "休息{}秒钟，马上回来",
+            (&*app_state.img_cfg).remove_duration_secs
+        );
+        tokio::time::sleep(tokio::time::Duration::from_secs(
+            (&*app_state.img_cfg).remove_duration_secs as u64,
+        ))
+        .await;
     }
 }
