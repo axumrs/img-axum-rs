@@ -1,0 +1,11 @@
+RUST_LOG='img_axum_rs=debug'
+S3.BUCKET="<存储桶名称>"
+S3.REGION="<地区>"
+S3.ACCESS_KEY="<访问密钥>"
+S3.SECRET_KEY="<安全密码>"
+WEB.ADDR="0.0.0.0:9527"
+PG.DSN="postgres://img_axum_rs:img_axum_rs@127.0.0.1:5432/img_axum_rs"
+PG.MAX_CONNECTIONS=5
+IMG.EXPIRES_DAYS=15
+IMG.DOMAIN="https://img.axum.eu.org/"
+IMG.MAX_SIZE=5242880
