@@ -9,6 +9,8 @@ pub enum Kind {
     Template,
     Image,
     S3,
+    Hash,
+    Database,
 }
 
 #[derive(Debug)]
@@ -33,6 +35,9 @@ impl Error {
 
     pub fn from_str(kind: Kind, msg: &str) -> Self {
         Self::new(kind, msg.to_string(), None)
+    }
+    pub fn from_string(kind: Kind, msg: String) -> Self {
+        Self::new(kind, msg, None)
     }
 }
 
@@ -67,5 +72,17 @@ impl From<askama::Error> for Error {
 impl From<s3::error::S3Error> for Error {
     fn from(e: s3::error::S3Error) -> Self {
         Self::with_cause(Kind::S3, Box::new(e))
+    }
+}
+
+impl From<base16ct::Error> for Error {
+    fn from(e: base16ct::Error) -> Self {
+        Self::from_string(Kind::Hash, e.to_string())
+    }
+}
+
+impl From<sqlx::Error> for Error {
+    fn from(e: sqlx::Error) -> Self {
+        Self::with_cause(Kind::Database, Box::new(e))
     }
 }

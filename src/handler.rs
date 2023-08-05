@@ -5,10 +5,9 @@ use axum::{
     extract::{Multipart, Path, State},
     http::{HeaderMap, StatusCode},
     response::Html,
-    Form,
 };
 
-use crate::{view, AppState, Error, Result};
+use crate::{meta, view, AppState, Error, Result};
 
 type RedirectResponse = (StatusCode, HeaderMap, ());
 
@@ -73,7 +72,34 @@ pub async fn upload(
             return err;
         }
 
-        let file_name = gen_filename(&file_name);
+        // 计算哈希值
+        let hash = meta::data_hash(&data).map_err(log_error(handler_name))?;
+        // 是否存在
+        let exists_path: Option<(String,)> =
+            sqlx::query_as("SELECT path FROM images WHERE hash=$1")
+                .bind(&hash)
+                .fetch_optional(&*state.pool)
+                .await
+                .map_err(Error::from)?;
+        if let Some(exists_path) = exists_path {
+            tracing::debug!("已存在：{}, {}", &hash, &exists_path.0);
+            let url = format!("/{}", exists_path.0);
+            return redirect(&url);
+        }
+        // 入库
+        // 生成文件名
+        let id = xid::new().to_string();
+        let file_name = gen_filename(&file_name, &id);
+        let dataline = chrono::Local::now();
+        sqlx::query(
+            r"INSERT INTO images (id, path, hash, dateline, is_deleted) VALUES ($1, $2, $3, $4, $5)",
+        )
+        .bind(&id)
+        .bind(&file_name)
+        .bind(&hash)
+        .bind(&dataline)
+        .bind(false)
+        .execute(&*state.pool).await.map_err(Error::from)?;
 
         // 上传到对象存储
         let resp = (&*state.bucket)
@@ -82,7 +108,7 @@ pub async fn upload(
             .map_err(Error::from)
             .map_err(log_error(handler_name))?;
 
-        tracing::info!("已上传到对象存储：{:?}", resp);
+        tracing::debug!("已上传到对象存储：{:?}", resp);
 
         let url = format!("/{}", file_name);
         return redirect(&url);
@@ -105,12 +131,6 @@ fn redirect(url: &str) -> Result<RedirectResponse> {
     Ok((StatusCode::FOUND, header, ()))
 }
 
-fn gen_filename(filename: &str) -> String {
-    let path = std::path::Path::new(filename);
-    let ext_name = path
-        .extension()
-        .unwrap_or_default()
-        .to_str()
-        .unwrap_or_default();
-    format!("{}.{}", xid::new().to_string(), ext_name)
+fn gen_filename(filename: &str, id: &str) -> String {
+    meta::gen_filename(filename, Some(id))
 }

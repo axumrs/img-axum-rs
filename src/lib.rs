@@ -1,6 +1,7 @@
 mod config;
 mod err;
 pub mod handler;
+pub mod meta;
 mod state;
 pub mod view;
 
